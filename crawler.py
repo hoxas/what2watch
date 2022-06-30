@@ -1,25 +1,13 @@
-"""
-what2watch
-
-Usage:
-    what2watch [options] [URL...]
-
-Options:
-
-"""
 import urllib.request
 import re
 import ast
 import random
-import docopt
-import configparser
-import os
+
+
 from bs4 import BeautifulSoup
 
-arguments = docopt.docopt(__doc__, version="0.0.0")
 
-
-def main():
+def main(imdb_url: str):
     """
     Returns dictionary with the keys(types):
     URL(string)
@@ -32,29 +20,6 @@ def main():
     credits(dict(arrays))
     score(string)
     """
-
-    config = configparser.ConfigParser()
-
-    def create_config(config: configparser.ConfigParser) -> None:
-        """Creates config file
-
-        Args:
-            config (ConfigParser): configparser object
-        """
-        config['SETTINGS'] = {'imdb_url': 'https://www.imdb.com/chart/top/'}
-        config.write(open('config.ini', 'w'))
-
-    # Creating config file if it doesn't exist
-    if not os.path.exists('config.ini'):
-        create_config(config)
-
-    # Get the config file
-    config.read('config.ini')
-    try:
-        imdb_url = config.get('SETTINGS', 'imdb_url')
-    except:
-        create_config(config)
-        imdb_url = config.get('SETTINGS', 'imdb_url')
 
     markup = urllib.request.urlopen(imdb_url)
     soup = BeautifulSoup(markup, 'html.parser')
@@ -119,7 +84,3 @@ def main():
     for key, val in winner.items():
         print(f'{key.title()}: {val}')
     return winner
-
-
-if __name__ == '__main__':
-    main()
