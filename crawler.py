@@ -47,15 +47,15 @@ def main():
     # Creating config file if it doesn't exist
     if not os.path.exists('config.ini'):
         create_config(config)
-        # Get the config file
-    else:
-        config.read('config.ini')
-        try:
-            imdb_url = config.get('SETTINGS', 'imdb_url')
-        except:
-            create_config(config)
 
-    # imdb_url = 'https://www.imdb.com/user/ur56869126/watchlist'
+    # Get the config file
+    config.read('config.ini')
+    try:
+        imdb_url = config.get('SETTINGS', 'imdb_url')
+    except:
+        create_config(config)
+        imdb_url = config.get('SETTINGS', 'imdb_url')
+
     markup = urllib.request.urlopen(imdb_url)
     soup = BeautifulSoup(markup, 'html.parser')
     list_widget = soup.find('span', {'class': 'ab_widget'})
@@ -74,7 +74,7 @@ def main():
     winner['URL'] = random.choice(list)
 
     winner['link'] = f'https://www.imdb.com/title/{winner["URL"]}/'
-    print(winner['link'])
+    # print(winner['link'])
     winner_markup = urllib.request.urlopen(winner['link'])
     winner_soup = BeautifulSoup(winner_markup, 'html.parser')
     winner_title = winner_soup.find('title').text
