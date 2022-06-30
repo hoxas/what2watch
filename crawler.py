@@ -55,7 +55,7 @@ def main():
         except:
             create_config(config)
 
-    #imdb_url = 'https://www.imdb.com/user/ur56869126/watchlist'
+    # imdb_url = 'https://www.imdb.com/user/ur56869126/watchlist'
     markup = urllib.request.urlopen(imdb_url)
     soup = BeautifulSoup(markup, 'html.parser')
     list_widget = soup.find('span', {'class': 'ab_widget'})
@@ -80,22 +80,27 @@ def main():
     winner_title = winner_soup.find('title').text
     winner['title'] = winner_title.replace(' - IMDb', '')
     winner_titleblock = winner_soup.find(
-        'div', {'class': re.compile('TitleBlock__TitleMetaDataContainer.+')})
+        'div', {'class': re.compile('sc.+cMYixt')})
     winner['length'] = winner_titleblock.find_all(
         'li', {'class': 'ipc-inline-list__item'})[2].text
     winner['image'] = winner_soup.find('img', {'class': 'ipc-image'})['src']
     winner['plot'] = winner_soup.find(
-        'span', {'class': re.compile('GenresAndPlot__TextContainerBreakpoint.+')}).text
+        'span', {'class': re.compile('sc.+fMPjMP')}).text
 
     winner_genrechips = winner_soup.find_all(
-        'a', {'class': re.compile('GenresAndPlot__GenreChip.+')})
+        'li', {'class': re.compile('ipc-inline-list__item ipc-chip__text')})
     winner['genre'] = [
-        i.find('span', {'class': 'ipc-chip__text'}).text for i in winner_genrechips]
+        i.text for i in winner_genrechips]
 
-    winner_credits = winner_soup.find(
-        'div', {'class': re.compile('PrincipalCredits__PrincipalCredits.+')})
-    winner_credits = winner_credits.find_all(
-        'li', {'class': 'ipc-metadata-list__item'})
+    cast = winner_soup.find_all(
+        'div', {'class': re.compile('sc.+eVsQmt')})
+    winner['cast'] = [cast_member.find('a', {'class': re.compile('sc.+gJhRzH')}).text
+                      for cast_member in cast]
+    winner_credits_container = winner_soup.find(
+        'ul', {'class': re.compile('ipc-metadata-list ipc-metadata-list--dividers-all.+jIsryf.+?')})
+    # Lambda function to get exact match on class
+    winner_credits = winner_credits_container.find_all(
+        lambda tag: tag.name == 'li' and tag.get('class') == ['ipc-metadata-list__item'])
     winner['credits'] = {
         i.find(
             ['span', 'a'],
@@ -107,12 +112,12 @@ def main():
     }
 
     imdb_rating = winner_soup.find(
-        'span', {'class': re.compile('AggregateRatingButton__RatingScore.+')}).text
+        'span', {'class': re.compile('sc.+jGRxWM')}).text
     meta_rating = winner_soup.find('span', {'class': 'score-meta'}).text
-    winner['score'] = 'IMDb Score: ' + imdb_rating + \
-        '  Metacritic Score: ' + meta_rating
+    winner['score'] = f'IMDb Score: {imdb_rating}   Metacritic Score: {meta_rating}'
 
-    print(winner)
+    for key, val in winner.items():
+        print(f'{key.title()}: {val}')
     return winner
 
 
