@@ -39,7 +39,7 @@ def main(imdb_url: str):
     winner['URL'] = random.choice(list)
 
     winner['link'] = f'https://www.imdb.com/title/{winner["URL"]}/'
-    # print(winner['link'])
+    print(winner['link'])
     winner_markup = urllib.request.urlopen(winner['link'])
     winner_soup = BeautifulSoup(winner_markup, 'html.parser')
     winner_title = winner_soup.find('title').text
@@ -78,9 +78,11 @@ def main(imdb_url: str):
 
     imdb_rating = winner_soup.find(
         'span', {'class': re.compile('sc.+jGRxWM')}).text
-    meta_rating = winner_soup.find('span', {'class': 'score-meta'}).text
+    try:
+        meta_rating = winner_soup.find('span', {'class': 'score-meta'}).text
+    except:
+        meta_rating = 'N/A'
+
     winner['score'] = f'IMDb Score: {imdb_rating}   Metacritic Score: {meta_rating}'
 
-    for key, val in winner.items():
-        print(f'{key.title()}: {val}')
     return winner

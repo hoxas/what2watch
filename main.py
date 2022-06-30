@@ -2,48 +2,51 @@
 what2watch
 
 Usage:
-    what2watch [options] [URL...]
+    what2watch [options] [URL]
 
 Options:
+    -h --help                 Show this screen.
+    --version                 Show version.
+    -v --verbose              Verbose output.
+    -q --quiet                Quiet output.
+    -c --config               Show config file.
+    --imdb-path=PATH          Set default imdb path in config & exit.
 
+Arguments:
+    URL                       IMDB Watchlist URL.
+
+Examples:
+    # Default imdb path found in the config file:
+    what2watch
+    # Custom imdb path:
+    what2watch https://www.imdb.com/path/to/public/watchlist/
 """
 
-import configparser
-import os
 import docopt
 from crawler import main as crawler_main
+from utils import ConfigManager
 
+config = ConfigManager()
 arguments = docopt.docopt(__doc__, version="0.0.0")
 
-config = configparser.ConfigParser()
+if arguments['--imdb-path']:
+    config.imdb_url = arguments['--imdb-path']
+    print(f'IMDb default path set to {arguments["--imdb-path"]}')
+    print('Exiting...')
+    exit()
 
-
-def create_config(config: configparser.ConfigParser) -> None:
-    """Creates config file
-
-    Args:
-        config (ConfigParser): configparser object
-    """
-    config['SETTINGS'] = {'imdb_url': 'https://www.imdb.com/chart/top/'}
-    config.write(open('config.ini', 'w'))
+if arguments['URL']:
+    imdb_url = arguments['URL']
+else:
+    imdb_url = config.imdb_url
 
 
 def main():
-    # Creating config file if it doesn't exist
-    if not os.path.exists('config.ini'):
-        create_config(config)
-
-    # Get the config file
-    config.read('config.ini')
-    try:
-        imdb_url = config.get('SETTINGS', 'imdb_url')
-    except:
-        create_config(config)
-        imdb_url = config.get('SETTINGS', 'imdb_url')
-
     # Run the crawler
     return crawler_main(imdb_url)
 
 
 if __name__ == '__main__':
-    main()
+    winner = main()
+    for key, val in winner.items():
+        print(f'{key.title()}: {val}')
