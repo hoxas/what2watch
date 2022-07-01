@@ -17,19 +17,12 @@ class ConfigManager():
         self.config = configparser.ConfigParser()
         self.parse_config()
 
-    def read_config(self):
-        """
-        Read the config file (config.ini)
-        -> Ran automatically during __init__
-        """
-        self.config.read('config.ini')
-
     def parse_config(self):
         """
         Parse or create the config file (config.ini)
         -> Ran automatically during __init__
         """
-
+        self.config.read('config.ini')
         try:
             self.config['SETTINGS']
         except KeyError:
