@@ -1,7 +1,12 @@
 import os
 import configparser
 
-DEFAULT_URL = 'https://www.imdb.com/chart/top/'
+charts = {
+    'top': 'https://www.imdb.com/chart/top/',
+    'bottom': 'https://www.imdb.com/chart/bottom/',
+    'box_office': 'https://www.imdb.com/chart/boxoffice/',
+    'popular': 'https://www.imdb.com/chart/moviemeter/',
+}
 
 
 class ConfigManager():
@@ -31,7 +36,7 @@ class ConfigManager():
         try:
             self._imdb_url = self.config.get('SETTINGS', 'imdb_url')
         except:
-            self._imdb_url = DEFAULT_URL
+            self._imdb_url = charts['top']
 
     @property
     def imdb_url(self):

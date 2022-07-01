@@ -9,7 +9,7 @@
 
 ## About <a name = "about"></a>
 
-A CLI to pick a random title from a IMDb watchlist.
+A CLI to pick a random title from a IMDb watchlist or chart.
 
 #### Future Implementation Idea:
 

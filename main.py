@@ -4,6 +4,7 @@ what2watch
 Usage:
     what2watch [options] [URL]
 
+
 Options:
     -h --help                 Show this screen.
     --version                 Show version.
@@ -13,7 +14,13 @@ Options:
     --imdb-path=PATH          Set default imdb path in config & exit.
 
 Arguments:
-    URL                       IMDB Watchlist URL.
+    URL                       IMDB Watchlist, chart URL or chart option.
+
+Chart Options:
+    top                       Top 250 Movies Chart (default)
+    bottom                    Bottom 100 Movies Chart
+    box_office                Top Box Office Movies Chart
+    popular                   Most Popular Movies Chart
 
 Examples:
     # Default imdb path found in the config file:
@@ -24,7 +31,7 @@ Examples:
 
 import docopt
 from crawler import main as crawler_main
-from utils import ConfigManager
+from utils import ConfigManager, charts
 
 config = ConfigManager()
 arguments = docopt.docopt(__doc__, version="0.0.0")
@@ -36,7 +43,10 @@ if arguments['--imdb-path']:
     exit()
 
 if arguments['URL']:
-    imdb_url = arguments['URL']
+    if arguments['URL'] in charts:
+        imdb_url = charts[arguments['URL']]
+    else:
+        imdb_url = arguments['URL']
 else:
     imdb_url = config.imdb_url
 
