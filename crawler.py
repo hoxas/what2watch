@@ -1,3 +1,4 @@
+import urllib
 import urllib.request
 import re
 import ast
@@ -6,8 +7,11 @@ import random
 
 from bs4 import BeautifulSoup
 
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'}
 
-def get_watchlist(soup: BeautifulSoup) -> list:
+
+def get_watchlist(soup: BeautifulSoup) -> list[str]:
     """
     Returns a list of IMDB IDs from the watchlist
 
@@ -30,7 +34,7 @@ def get_watchlist(soup: BeautifulSoup) -> list:
     return movie_list
 
 
-def get_chart(soup: BeautifulSoup) -> list:
+def get_chart(soup: BeautifulSoup) -> list[str]:
     """
     Returns a list of IMDB IDs from the chart
 
@@ -51,6 +55,95 @@ def get_chart(soup: BeautifulSoup) -> list:
     return movie_list
 
 
+def get_episodes(season_soup: BeautifulSoup) -> list[str]:
+    """
+    Returns a list of IMDB IDs from the episodes
+
+    Won't raise an exception if the url is a tv show page
+
+    Args:
+        season_soup (BeautifulSoup): BeautifulSoup object
+    """
+
+    list_widget = season_soup.find('div', {'class': 'list detail eplist'})
+    episodes = list_widget.find_all('div', {'class': 'list_item'})
+    episode_list = [episode.find('a')['href'].replace(
+        '/title/', '').rstrip('/') for episode in episodes]
+
+    return episode_list
+
+
+def get_seasons_number_imdb(soup: BeautifulSoup) -> int:
+    """
+    Returns the number of seasons of a TV show from an IMDb TV show page
+
+    Args:
+        soup (BeautifulSoup): BeautifulSoup object
+    """
+    seasons_number = soup.find(
+        'select', {'id': 'browse-episodes-season'})['aria-label']
+    seasons_number = int(re.sub('\D', '', seasons_number))  # remove non-digits
+    return seasons_number
+
+
+def get_seasons_number_google(soup: BeautifulSoup) -> int:
+    """
+    Returns the number of seasons of a TV show from a google search
+
+    Args:
+        soup (BeautifulSoup): BeautifulSoup object
+    """
+    show_title = soup.find('title').text
+    show_title_cleaned = show_title.split('(')[-2].strip()
+    search_query = f'how many seasons does {show_title_cleaned} have%3F'
+    search_query_encoded = search_query.replace(' ', '+')
+    google_search = f'https://www.google.com/search?q={search_query_encoded}'
+    google_request = urllib.request.Request(google_search, headers=HEADERS)
+    markup = urllib.request.urlopen(google_request)
+    google_soup = BeautifulSoup(markup, 'html.parser')
+    google_search_result = google_soup.find('div', {'class': 'Z0LcW'}).text
+    seasons_number = int(google_search_result)
+    return seasons_number
+
+
+def get_seasons(soup: BeautifulSoup, imdb_url: str) -> list[list[str]]:
+    """
+    Returns a list of seasons with episodes from an IMDb TV show page
+
+    Won't raise an exception if the url is a tv show page
+
+    Example:
+    https://www.imdb.com/title/tt0472954/
+    which supports episodes?season postfix like so:
+    https://www.imdb.com/title/tt0472954/episodes?season=1
+
+    Returns:
+        seasons (list): List of seasons
+
+    Args:
+        soup (BeautifulSoup): BeautifulSoup object
+        imdb_url (str): IMDb TV Show Title URL
+    """
+
+    seasons = []
+
+    try:
+        print('Getting seasons from IMDb')
+        seasons_numbers = get_seasons_number_imdb(soup)
+    except Exception as e:
+        print('Exception: ' + e)
+        print('Trying to fetch seasons number through Google search')
+        seasons_numbers = get_seasons_number_google(soup)
+
+    for season_num in range(1, seasons_numbers + 1):
+        season_url = f'{imdb_url}episodes?season={season_num}'
+        markup = urllib.request.urlopen(season_url)
+        season_soup = BeautifulSoup(markup, 'html.parser')
+        seasons.append(get_episodes(season_soup))
+
+    return seasons
+
+
 def main(imdb_url: str):
     """
     Returns dictionary with the keys(types):
@@ -68,17 +161,27 @@ def main(imdb_url: str):
     markup = urllib.request.urlopen(imdb_url)
     soup = BeautifulSoup(markup, 'html.parser')
 
-    # Get the watchlist
-    try:
-        movie_list = get_watchlist(soup)
-    except:
-        movie_list = get_chart(soup)
-
-    print(f'Choosing from {len(movie_list)} titles.')
-
     winner = dict()
 
-    winner['URL'] = random.choice(movie_list)
+    # Get the watchlist
+    if 'www.imdb.com/title/' in imdb_url:
+        imdb_url_clean = imdb_url.split('?')[0]
+        if imdb_url_clean[-1] != '/':
+            imdb_url_clean += '/'
+        seasons = get_seasons(soup, imdb_url_clean)
+        winner['SEASON'] = random.randrange(0, len(seasons))
+        winner['EPISODE'] = random.randrange(0, len(seasons[winner['SEASON']]))
+        winner['URL'] = seasons[winner['SEASON']][winner['EPISODE']]
+        winner['SEASON'] += 1
+        winner['EPISODE'] += 1
+    else:
+        try:
+            movie_list = get_watchlist(soup)
+        except:
+            movie_list = get_chart(soup)
+        finally:
+            print(f'Choosing from {len(movie_list)} titles.')
+            winner['URL'] = random.choice(movie_list)
 
     winner['link'] = f'https://www.imdb.com/title/{winner["URL"]}/'
     print(winner['link'])
