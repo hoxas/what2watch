@@ -7,6 +7,50 @@ import random
 from bs4 import BeautifulSoup
 
 
+def get_watchlist(soup: BeautifulSoup) -> list:
+    """
+    Returns a list of IMDB IDs from the watchlist
+
+    Won't raise an exception if the url is a public watchlist
+
+    Args:
+        soup (BeautifulSoup): BeautifulSoup object
+    """
+
+    list_widget = soup.find('span', {'class': 'ab_widget'})
+    script = list_widget.find('script').string
+    target = '"starbars":{.+},"ribbons":'
+    movie_list_search = re.search(target, script)
+    # scraping movie list from script starbars sections
+    cleaned_movie_list = movie_list_search[0].lstrip(
+        '"starbars":').rstrip(',"ribbons":')
+    movie_list_dict = ast.literal_eval(cleaned_movie_list)
+    movie_list = [key for key in movie_list_dict]
+
+    return movie_list
+
+
+def get_chart(soup: BeautifulSoup) -> list:
+    """
+    Returns a list of IMDB IDs from the chart
+
+    Won't raise an exception if the url is a chart
+
+    Args:
+        soup (BeautifulSoup): BeautifulSoup object
+    """
+
+    list_widget = soup.find('span', {'class': 'ab_widget'})
+    titles_td = list_widget.find_all('td', {'class': 'titleColumn'})
+    movie_list = [title.find('a')['href'].split('?')[0].strip(
+        '/').replace('title/', '') for title in titles_td]
+
+    title = list_widget.find('h1', {'class': 'header'}).text
+    print(f'Choosing from chart: {title}')
+
+    return movie_list
+
+
 def main(imdb_url: str):
     """
     Returns dictionary with the keys(types):
@@ -20,23 +64,21 @@ def main(imdb_url: str):
     credits(dict(arrays))
     score(string)
     """
-
+    print(imdb_url)
     markup = urllib.request.urlopen(imdb_url)
     soup = BeautifulSoup(markup, 'html.parser')
-    list_widget = soup.find('span', {'class': 'ab_widget'})
-    script = list_widget.find('script').string
-    target = '"starbars":{.+},"ribbons":'
-    list = re.search(target, script)
-    list = list[0].lstrip('"starbars":').rstrip(',"ribbons":')
-    list = ast.literal_eval(list)
-    list = [key for key in list]
-    list_len = len(list)
 
-    print(f'Choosing from {list_len} titles.')
+    # Get the watchlist
+    try:
+        movie_list = get_watchlist(soup)
+    except:
+        movie_list = get_chart(soup)
 
-    winner = {}
+    print(f'Choosing from {len(movie_list)} titles.')
 
-    winner['URL'] = random.choice(list)
+    winner = dict()
+
+    winner['URL'] = random.choice(movie_list)
 
     winner['link'] = f'https://www.imdb.com/title/{winner["URL"]}/'
     print(winner['link'])
@@ -82,7 +124,6 @@ def main(imdb_url: str):
         meta_rating = winner_soup.find('span', {'class': 'score-meta'}).text
     except:
         meta_rating = 'N/A'
-
     winner['score'] = f'IMDb Score: {imdb_rating}   Metacritic Score: {meta_rating}'
 
     return winner
