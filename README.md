@@ -71,7 +71,7 @@ what2watch [options] [URL]
 <tr><td>-v --verbose</td> <td>Verbose output.</td></tr>
 <tr><td>-q --quiet</td> <td>Quiet output.</td><tr>
 <tr><td>-c --config</td> <td>Show config file.</td><tr>
-<tr><td>--imdb-path=PATH</td> <td>Set default imdb path in config.<td><tr>
+<tr><td>--imdb-path=PATH</td> <td>Set default imdb path in config.</td><tr>
 </table>
 
 ### Arguments
