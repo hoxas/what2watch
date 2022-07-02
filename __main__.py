@@ -2,7 +2,7 @@
 what2watch
 
 Usage:
-    what2watch [options] [URL]
+    what2watch [options] [URL] [--seasons=<seasons>]
 
 
 Options:
@@ -12,6 +12,9 @@ Options:
     -q --quiet                Quiet output.
     -c --config               Show config file.
     --imdb-path=PATH          Set default imdb path in config & exit.
+    --seasons=SEASONS         Choose from specific seasons, otherwise all seasons.
+
+
 
 Arguments:
     URL                       IMDB Watchlist, chart URL, TV show page or chart option.
@@ -27,6 +30,11 @@ Examples:
     what2watch
     # Custom imdb path:
     what2watch https://www.imdb.com/path/to/public/watchlist/
+    # Season filter:
+    what2watch --seasons=2  (Get season 2)
+    what2watch --seasons=1,2,3,4,5  (Get seasons 1,2,3,4,5)
+    what2watch --seasons=1-5    (Get seasons 1,2,3,4,5)
+    what2watch --seasons=1-5,7,9-11  (Get seasons 1,2,3,4,5,7,9,10,11)
 """
 
 import docopt
@@ -53,7 +61,10 @@ else:
 
 def main():
     # Run the crawler
-    return crawler_main(imdb_url)
+    if arguments['--seasons']:
+        return crawler_main(imdb_url, arguments['--seasons'])
+    else:
+        return crawler_main(imdb_url)
 
 
 if __name__ == '__main__':

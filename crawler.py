@@ -106,7 +106,7 @@ def get_seasons_number_google(soup: BeautifulSoup) -> int:
     return seasons_number
 
 
-def get_seasons(soup: BeautifulSoup, imdb_url: str) -> list[list[str]]:
+def get_seasons(soup: BeautifulSoup, imdb_url: str, seasons_filter: str) -> list[list[str]]:
     """
     Returns a list of seasons with episodes from an IMDb TV show page
 
@@ -127,24 +127,40 @@ def get_seasons(soup: BeautifulSoup, imdb_url: str) -> list[list[str]]:
 
     seasons = []
 
-    try:
-        print('Getting seasons from IMDb')
-        seasons_numbers = get_seasons_number_imdb(soup)
-    except Exception as e:
-        print('Exception: ' + e)
-        print('Trying to fetch seasons number through Google search')
-        seasons_numbers = get_seasons_number_google(soup)
+    if seasons_filter:
+        seasons_selected = []
+        filter_list = seasons_filter.split(',')
+        for cur_filter in filter_list:
+            if '-' in cur_filter:
+                season_filter = cur_filter.split('-')
+                season_filter_list = range(
+                    int(season_filter[0]), int(season_filter[1]) + 1)
+                for season_filter in season_filter_list:
+                    seasons_selected.append(int(season_filter))
+            else:
+                season_filter = int(cur_filter)
+                seasons_selected.append(season_filter)
+    else:
+        try:
+            print('Getting seasons from IMDb')
+            seasons_numbers = get_seasons_number_imdb(soup)
+        except Exception as e:
+            print('Exception: ' + e)
+            print('Trying to fetch seasons number through Google search')
+            seasons_numbers = get_seasons_number_google(soup)
+        finally:
+            seasons_selected = range(1, seasons_numbers + 1)
 
-    for season_num in range(1, seasons_numbers + 1):
+    for season_num in seasons_selected:
         season_url = f'{imdb_url}episodes?season={season_num}'
         markup = urllib.request.urlopen(season_url)
         season_soup = BeautifulSoup(markup, 'html.parser')
         seasons.append(get_episodes(season_soup))
 
-    return seasons
+    return seasons, seasons_selected
 
 
-def main(imdb_url: str):
+def main(imdb_url: str, seasons_filter='') -> dict[str, list[str], dict[list[str]]]:
     """
     Returns dictionary with the keys(types):
     URL(string)
@@ -168,11 +184,12 @@ def main(imdb_url: str):
         imdb_url_clean = imdb_url.split('?')[0]
         if imdb_url_clean[-1] != '/':
             imdb_url_clean += '/'
-        seasons = get_seasons(soup, imdb_url_clean)
+        seasons, seasons_selected = get_seasons(
+            soup, imdb_url_clean, seasons_filter)
         winner['SEASON'] = random.randrange(0, len(seasons))
         winner['EPISODE'] = random.randrange(0, len(seasons[winner['SEASON']]))
         winner['URL'] = seasons[winner['SEASON']][winner['EPISODE']]
-        winner['SEASON'] += 1
+        winner['SEASON'] = seasons_selected[winner['SEASON']]
         winner['EPISODE'] += 1
     else:
         try:
