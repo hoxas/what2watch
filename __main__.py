@@ -14,7 +14,7 @@ Options:
     --imdb-path=PATH          Set default imdb path in config & exit.
 
 Arguments:
-    URL                       IMDB Watchlist, chart URL or chart option.
+    URL                       IMDB Watchlist, chart URL, TV show page or chart option.
 
 Chart Options:
     top                       Top 250 Movies Chart (default)

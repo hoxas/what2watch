@@ -9,11 +9,7 @@
 
 ## About <a name = "about"></a>
 
-A CLI to pick a random title from a IMDb watchlist or chart.
-
-#### Future Implementation Idea:
-
-Add choose random episode from tv-show functionality, w/ season filtering.
+A CLI to pick a random title from a IMDb watchlist, chart or random episode from tv show.
 
 ## Getting Started <a name = "getting_started"></a>
 
