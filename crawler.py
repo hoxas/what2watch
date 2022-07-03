@@ -1,16 +1,41 @@
+from bs4 import BeautifulSoup
 import urllib
 import urllib.request
 import re
 import ast
 import random
+import pickle
+from diskcache import Cache
 
 
-from bs4 import BeautifulSoup
+cache_obj = Cache('cache')
+
+
+def cache(func):
+    """
+    Decorator for caching the results of a function
+    """
+    def wrapper(*args, **kwargs):
+        args_list = list(args)
+        args_list[0] = args_list[0].find('title').text
+        key = func.__name__ + str(args_list)
+        with Cache(cache_obj.directory) as reference:
+            if key in reference:
+                # print(f'Fetching from cache! - {func.__name__}')
+                return pickle.loads(cache_obj[key])
+            else:
+                # print(f'Setting cache! - {func.__name__}')
+                result = func(*args, **kwargs)
+                cache_obj[key] = pickle.dumps(result)
+                return result
+    return wrapper
+
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'}
 
 
+@cache
 def get_watchlist(soup: BeautifulSoup) -> list[str]:
     """
     Returns a list of IMDB IDs from the watchlist
@@ -34,6 +59,7 @@ def get_watchlist(soup: BeautifulSoup) -> list[str]:
     return movie_list
 
 
+@cache
 def get_chart(soup: BeautifulSoup) -> list[str]:
     """
     Returns a list of IMDB IDs from the chart
@@ -55,6 +81,7 @@ def get_chart(soup: BeautifulSoup) -> list[str]:
     return movie_list
 
 
+@cache
 def get_episodes(season_soup: BeautifulSoup) -> list[str]:
     """
     Returns a list of IMDB IDs from the episodes
@@ -73,6 +100,7 @@ def get_episodes(season_soup: BeautifulSoup) -> list[str]:
     return episode_list
 
 
+@cache
 def get_seasons_number_imdb(soup: BeautifulSoup) -> int:
     """
     Returns the number of seasons of a TV show from an IMDb TV show page
@@ -86,6 +114,7 @@ def get_seasons_number_imdb(soup: BeautifulSoup) -> int:
     return seasons_number
 
 
+@cache
 def get_seasons_number_google(soup: BeautifulSoup) -> int:
     """
     Returns the number of seasons of a TV show from a google search
@@ -106,6 +135,7 @@ def get_seasons_number_google(soup: BeautifulSoup) -> int:
     return seasons_number
 
 
+@cache
 def get_seasons(soup: BeautifulSoup, imdb_url: str, seasons_filter: str) -> list[list[str]]:
     """
     Returns a list of seasons with episodes from an IMDb TV show page
@@ -192,13 +222,12 @@ def main(imdb_url: str, seasons_filter='') -> dict[str, list[str], dict[list[str
         winner['SEASON'] = seasons_selected[winner['SEASON']]
         winner['EPISODE'] += 1
     else:
-        try:
-            movie_list = get_watchlist(soup)
-        except:
+        if 'www.imdb.com/chart/' in imdb_url:
             movie_list = get_chart(soup)
-        finally:
-            print(f'Choosing from {len(movie_list)} titles.')
-            winner['URL'] = random.choice(movie_list)
+        else:
+            movie_list = get_watchlist(soup)
+        print(f'Choosing from {len(movie_list)} titles.')
+        winner['URL'] = random.choice(movie_list)
 
     winner['link'] = f'https://www.imdb.com/title/{winner["URL"]}/'
     print(winner['link'])
