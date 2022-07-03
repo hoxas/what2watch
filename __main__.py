@@ -24,6 +24,7 @@ Chart Options:
     bottom                    Bottom 100 Movies Chart
     box_office                Top Box Office Movies Chart
     popular                   Most Popular Movies Chart
+    top-tv                    Top 250 TV Shows Chart
 
 Examples:
     # Default imdb path found in the config file:

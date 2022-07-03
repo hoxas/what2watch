@@ -85,6 +85,7 @@ what2watch [options] [URL]
 <tr><td>bottom</td> <td>Bottom 100 Movies Chart</td><td>https://www.imdb.com/chart/bottom/</td></tr>
 <tr><td>box_office</td> <td>Top Box Office Movies Chart</td><td>https://www.imdb.com/chart/boxoffice/</td></tr>
 <tr><td>popular</td> <td>Most Popular Movies Chart</td><td>https://www.imdb.com/chart/moviemeter/</td><tr>
+<tr><td>top_tv</td><td>Top 250 TV Shows Chart</td><td>https://www.imdb.com/chart/toptv/</td></tr>
 </table>
 
 ### Examples:

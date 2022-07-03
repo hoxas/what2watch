@@ -5,6 +5,7 @@ charts = {
     'bottom': 'https://www.imdb.com/chart/bottom/',
     'box_office': 'https://www.imdb.com/chart/boxoffice/',
     'popular': 'https://www.imdb.com/chart/moviemeter/',
+    'top_tv': 'https://www.imdb.com/chart/toptv/',
 }
 
 
