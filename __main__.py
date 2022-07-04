@@ -11,6 +11,7 @@ Options:
     -v --verbose              Verbose output.
     -q --quiet                Quiet output.
     -c --config               Show config file.
+    -i --ignore-cache         Ignore cache.
     --imdb-path=PATH          Set default imdb path in config & exit.
     --seasons=SEASONS         Choose from specific seasons, otherwise all seasons.
 
@@ -39,7 +40,7 @@ Examples:
 """
 
 import docopt
-from crawler import main as crawler_main
+from crawler import ImdbCrawler
 from utils import ConfigManager, charts
 
 config = ConfigManager()
@@ -51,6 +52,12 @@ if arguments['--imdb-path']:
     print('Exiting...')
     exit()
 
+if arguments['--ignore-cache']:
+    ignore_cache = True
+    print('Ignoring cache!')
+else:
+    ignore_cache = False
+
 if arguments['URL']:
     if arguments['URL'] in charts:
         imdb_url = charts[arguments['URL']]
@@ -59,16 +66,24 @@ if arguments['URL']:
 else:
     imdb_url = config.imdb_url
 
+if arguments['--seasons']:
+    seasons_filter = arguments['--seasons']
+else:
+    seasons_filter = ''
+
 
 def main():
-    # Run the crawler
-    if arguments['--seasons']:
-        return crawler_main(imdb_url, arguments['--seasons'])
-    else:
-        return crawler_main(imdb_url)
+    crawler = ImdbCrawler(imdb_url, seasons_filter, ignore_cache)
+    run = True
+    while run:
+        winner = crawler.get_winner()
+        for key, val in winner.items():
+            print(f'{key.title()}: {val}')
+        reroll = input('Reroll? Y/N: ')
+        if reroll.lower()[0] != 'y':
+            print('Exiting...')
+            run = False
 
 
 if __name__ == '__main__':
-    winner = main()
-    for key, val in winner.items():
-        print(f'{key.title()}: {val}')
+    main()
