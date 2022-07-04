@@ -42,6 +42,8 @@ Examples:
 import docopt
 from crawler import ImdbCrawler
 from utils import ConfigManager, charts
+#from kivy.app import App
+#from kivy.uix.widget import Widget
 
 config = ConfigManager()
 arguments = docopt.docopt(__doc__, version="0.0.0")
@@ -83,6 +85,15 @@ def main():
         if reroll.lower()[0] != 'y':
             print('Exiting...')
             run = False
+
+
+""" class MainMenu(Widget):
+    pass
+
+
+class What2WatchApp(App):
+    def build(self):
+        return MainMenu() """
 
 
 if __name__ == '__main__':

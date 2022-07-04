@@ -22,8 +22,8 @@ def cache(func):
         title = self.title
         seasons_filter = self.seasons_filter
 
-        if seasons_filter:
-            key = f'{func.__name__}[{title}][{seasons_filter}]'
+        if func.__name__ == 'get_seasons':
+            key = f'{func.__name__}[{title}]{seasons_filter}'
         else:
             key = f'{func.__name__}[{title}]'
 
@@ -49,11 +49,15 @@ class ImdbCrawler:
         print(self.imdb_url)
         markup = urllib.request.urlopen(self.imdb_url)
         self.soup = BeautifulSoup(markup, 'html.parser')
+        self.season_soup = False
         self.winner = dict()
 
     @property
     def title(self):
-        return self.soup.find('title').text
+        if self.season_soup:
+            return self.season_soup.find('title').text
+        else:
+            return self.soup.find('title').text
 
     def get_winner(self):
         """
@@ -106,7 +110,7 @@ class ImdbCrawler:
         winner['cast'] = [cast_member.find('a', {'class': re.compile('sc.+gJhRzH')}).text
                           for cast_member in cast]
         winner_credits_container = winner_soup.find(
-            'ul', {'class': re.compile('ipc-metadata-list ipc-metadata-list--dividers-all.+jIsryf.+?')})
+            'ul', {'class': re.compile('ipc-metadata-list ipc-metadata-list--dividers-all.+fEgKYH.+?')})
         # Lambda function to get exact match on class
         winner_credits = winner_credits_container.find_all(
             lambda tag: tag.name == 'li' and tag.get('class') == ['ipc-metadata-list__item'])
@@ -283,10 +287,12 @@ class ImdbCrawler:
             finally:
                 seasons_selected = range(1, seasons_numbers + 1)
 
+        # MAYBE MAKE THIS ASYNC?
         for season_num in seasons_selected:
             season_url = f'{imdb_url}episodes?season={season_num}'
             markup = urllib.request.urlopen(season_url)
             self.season_soup = BeautifulSoup(markup, 'html.parser')
             seasons.append(self.get_episodes())
+            self.season_soup = False
 
         return seasons, seasons_selected
